@@ -1,4 +1,4 @@
 # IMY-220
 IMY 220 Project
 
-READ ME
+READ ME After being cloned
