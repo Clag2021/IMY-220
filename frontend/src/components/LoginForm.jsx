@@ -14,23 +14,22 @@ function LoginForm() {
     };
 
     try {
-      const response = await fetch("http://localhost:3000/api/login", {
+      const response = await fetch("http://localhost:3000/api/auth/login", {
         method: "POST",
-
         headers: {
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify(loginData),
       });
 
       const data = await response.json();
 
-      console.log(data);
-
       if (data.success) {
+        localStorage.setItem("user", JSON.stringify(data.user));
         alert(data.message);
         navigate("/home");
+      } else {
+        alert(data.message || "Login failed");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -61,9 +60,7 @@ function LoginForm() {
           required
         />
 
-        <button type="submit">
-          Login
-        </button>
+        <button type="submit">Login</button>
       </form>
     </section>
   );

@@ -1,59 +1,96 @@
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 
 import Header from "../components/Header";
 import Profile from "../components/Profile";
-import EditProfile from "../components/EditProfile";
-import CreatePost from "../components/CreatePost";
-import PostList from "../components/PostList";
-import FriendList from "../components/FriendList";
+import Feed from "../components/Feed";
 
 function ProfilePage() {
-  const { id } = useParams();
+  const { id: paramId } = useParams();
 
-  const [user, setUser] = useState({
-    name: "Alex Smith",
-    username: "alexsmith",
-    bio: "Photography, travelling and good food 📸",
-    location: "Pretoria, South Africa",
-    posts: 24,
-    friends: 156,
-  });
+  const loggedUser = JSON.parse(localStorage.getItem("user"));
+  const currentUserId = loggedUser?._id || loggedUser?.id;
+
+  const targetUserId = paramId || currentUserId;
+
+  const [user, setUser] = useState(null);
+  const [feedKey, setFeedKey] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  const getUserData = useCallback(async () => {
+    if (!targetUserId) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`http://localhost:3000/api/users/${targetUserId}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setUser(data.user);
+      } else {
+        setUser(null);
+      }
+    } catch (error) {
+      console.error("Could not load profile data:", error);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [targetUserId]);
+
+  useEffect(() => {
+    getUserData();
+  }, [getUserData]);
+
+  const handlePostCreated = () => {
+    getUserData();
+    setFeedKey((prevKey) => prevKey + 1);
+  };
+
+  const handleUserUpdated = (updatedUser) => {
+    setUser(updatedUser);
+    setFeedKey((prevKey) => prevKey + 1);
+  };
+
+  if (loading) {
+    return <p className="text-center mt-10 font-semibold">Loading profile...</p>;
+  }
+
+  if (!user) {
+    return (
+      <main className="min-h-screen flex flex-col">
+        <Header />
+        <div className="text-center my-20">
+          <h2 className="text-xl font-bold text-red-600">User Not Found</h2>
+          <p className="text-sm text-gray-500 mt-2">
+            The requested user profile does not exist or has been deleted.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <>
+    <main className="min-h-screen flex flex-col">
       <Header />
 
-      <main>
-        <h1>Profile</h1>
+      <section className="flex-1 px-[150px] py-[35px]">
+        <Profile
+          user={user}
+          onPostCreated={handlePostCreated}
+          onUserUpdated={handleUserUpdated}
+        />
 
-        {/* <p>Profile ID: {id}</p> */}
-
-        <section>
-          <Profile user={user} />
+        <section className="mt-[40px]">
+          <Feed key={feedKey} type="user" userId={targetUserId} />
         </section>
+      </section>
 
-        <section>
-          <EditProfile
-            user={user}
-            setUser={setUser}
-          />
-        </section>
-
-        <section>
-          <CreatePost />
-        </section>
-
-        <section>
-          <h2>Posts</h2>
-          <PostList />
-        </section>
-
-        <aside>
-          <FriendList />
-        </aside>
-      </main>
-    </>
+      <footer className="h-[70px] bg-[#961515]"></footer>
+    </main>
   );
 }
 
