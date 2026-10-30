@@ -1,32 +1,18 @@
-function Comments() {
-  const comments = [
-    {
-      id: 1,
-      username: "jamielee",
-      text: "This photo looks amazing!",
-    },
-    {
-      id: 2,
-      username: "samwilliams",
-      text: "Great shot 📸",
-    },
-    {
-      id: 3,
-      username: "taylorjones",
-      text: "Love the view!",
-    },
-  ];
-
+function Comments({ comments = [] }) {
   return (
-    <section>
-      <h2>Comments</h2>
+    <section className="mt-[20px] max-h-[500px] overflow-y-auto flex flex-col gap-[10px]">
+      <h3 className="font-bold text-[16px] border-b pb-[5px]">Comments</h3>
 
-      {comments.map((comment) => (
-        <article key={comment.id}>
-          <strong>@{comment.username}</strong>
-          <p>{comment.text}</p>
-        </article>
-      ))}
+      {comments && comments.length > 0 ? (
+        comments.map((comment, index) => (
+          <article key={comment._id || index} className="bg-gray-100 p-[8px] rounded text-[14px]">
+            <span className="font-semibold">@{comment.username || "User"}: </span>
+            <span>{comment.text}</span>
+          </article>
+        ))
+      ) : (
+        <p className="text-gray-400 text-[14px]">No comments yet.</p>
+      )}
     </section>
   );
 }

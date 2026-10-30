@@ -1,68 +1,105 @@
 import { useState } from "react";
+import { getRandomPlaceholder } from "../utils/placeholder";
 
-function CreatePost() {
+function CreatePost({ onPostCreated }) {
+  const [imgUrl, setImgUrl] = useState("");
   const [caption, setCaption] = useState("");
-  const [image, setImage] = useState(null);
+  const [hashtags, setHashtags] = useState("");
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  const loggedUser = JSON.parse(localStorage.getItem("user"));
+  const currentUserId = loggedUser?._id || loggedUser?.id;
 
-    if (caption.trim().length < 3) {
-      alert("Caption must be at least 3 characters.");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!currentUserId) {
+      alert("Please log in first.");
       return;
     }
 
-    if (!image) {
-      alert("Please select an image.");
-      return;
-    }
+    const finalImage = imgUrl.trim() !== "" ? imgUrl : getRandomPlaceholder();
 
-    alert("Post is valid and ready to be created.");
+    const postData = {
+      creator: currentUserId,
+      img: finalImage,
+      caption: caption,
+      hashtags: hashtags
+        ? hashtags.split(",").map((tag) => tag.trim().replace(/^#/, ""))
+        : [],
+    };
+
+    try {
+      const response = await fetch("http://localhost:3000/api/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(postData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("Post created successfully!");
+        setImgUrl("");
+        setCaption("");
+        setHashtags("");
+        if (onPostCreated) onPostCreated();
+      } else {
+        alert(data.message || "Failed to create post.");
+      }
+    } catch (error) {
+      console.error("Error creating post:", error);
+      alert("Could not connect to server.");
+    }
   };
 
   return (
-    <section>
-      <h2>Create Post</h2>
+    <form onSubmit={handleSubmit} className="border p-4 rounded-lg bg-white shadow-sm flex flex-col gap-3">
+      <h3 className="font-bold text-lg">Create a New Post</h3>
 
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="caption">Caption</label>
-
+      <div>
+        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">
+          Image URL <span className="text-gray-400 font-normal">(optional - randomized placeholder will be used)</span>
+        </label>
         <input
-          id="caption"
-          type="text"
+          type="url"
+          value={imgUrl}
+          onChange={(e) => setImgUrl(e.target.value)}
+          placeholder="https://example.com/image.jpg (leave empty for random image)"
+          className="w-full border p-2 rounded text-sm"
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Caption</label>
+        <textarea
+          value={caption}
+          onChange={(e) => setCaption(e.target.value)}
           placeholder="Write a caption..."
           required
-          minLength="3"
-          maxLength="200"
-          value={caption}
-          onChange={(event) => setCaption(event.target.value)}
+          className="w-full border p-2 rounded text-sm"
         />
+      </div>
 
-        <p>{caption.length}/200 characters</p>
-
-        <label htmlFor="image">Image</label>
-
+      <div>
+        <label className="block text-xs font-bold text-gray-700 uppercase mb-1">
+          Hashtags <span className="text-gray-400 font-normal">(comma separated)</span>
+        </label>
         <input
-          id="image"
-          type="file"
-          accept="image/*"
-          required
-          onChange={(event) => {
-            setImage(event.target.files[0]);
-          }}
+          type="text"
+          value={hashtags}
+          onChange={(e) => setHashtags(e.target.value)}
+          placeholder="food, brunch, yummy"
+          className="w-full border p-2 rounded text-sm"
         />
+      </div>
 
-        <button
-          type="submit"
-          disabled={
-            caption.trim().length < 3 ||
-            !image
-          }
-        >
-          Create Post
-        </button>
-      </form>
-    </section>
+      <button
+        type="submit"
+        className="bg-[#961515] text-white py-2 rounded font-semibold hover:bg-[#7a1010] transition"
+      >
+        Publish Post
+      </button>
+    </form>
   );
 }
 
