@@ -1,0 +1,24 @@
+EAT WITH ME
+IMY 220 Deliverable 2
+
+1. GITHUB REPOSITORY LINK
+GitHub Repository:
+    https://github.com/Clag2021/IMY-220.git
+
+4. DOCKER COMMANDS 
+
+To run the full application (Backend API + Frontend React UI) using Docker Compose:
+
+    1. Navigate to the root directory containing `docker-compose.yml`:
+    cd /path/to/project
+
+    2. Build and start the containers:
+    docker-compose up --build
+
+    3. Access the application:
+    - Frontend React App:  http://localhost:5173
+    - Backend Express API: http://localhost:3000/api/posts
+
+    4. To stop the running containers:
+    docker-compose down
+
